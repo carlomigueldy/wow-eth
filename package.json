@@ -4,7 +4,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "chain:start": "hardhat node",
+    "chain:test": "hardhat test",
+    "chain:deploy": "hardhat run scripts/deploy.ts --network localhost"
   },
   "dependencies": {
     "react": "^17.0.0",
@@ -14,6 +17,8 @@
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^4.3.2",
+    "@openzeppelin/hardhat-upgrades": "^1.10.0",
     "@typechain/ethers-v5": "^7.2.0",
     "@typechain/hardhat": "^2.3.1",
     "@types/chai": "^4.2.22",
