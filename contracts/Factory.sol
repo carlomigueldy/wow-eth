@@ -15,8 +15,6 @@ contract Factory {
 
     mapping(address => uint256) private _ownerToFactionsCount;
 
-    mapping(uint256 => Counters.Counter) private _factionIdToMemberCount;
-
     event FactionCreated(address owner, uint256 id, uint256 timestamp);
 
     event FactionMemberAdded(
@@ -109,6 +107,8 @@ contract Factory {
         public
         onlyFactionOwner(_dto.factionId)
     {
+        require(_dto.invited.length > 0, "Must invite at least 1 member.");
+
         for (uint256 index = 0; index < _dto.invited.length; index++) {
             address invited = _dto.invited[index];
 
@@ -121,11 +121,12 @@ contract Factory {
         public
         onlyFactionOwner(_dto.factionId)
     {
+        require(_dto.invited != address(0), "The address should not be 0");
+
         address _owner = _factionIdToOwner[_dto.factionId];
 
         factions[_dto.factionId].members.push(_dto.invited);
         factions[_dto.factionId].totalMembers++;
-        _factionIdToMemberCount[_dto.factionId].increment();
 
         console.log(
             "addFactionMember | A new Faction Member '%s' has been added by '%s'\n",
@@ -134,24 +135,6 @@ contract Factory {
         );
 
         emit FactionMemberAdded(_dto.invited, msg.sender, _dto.factionId);
-    }
-
-    /// @dev Retrieve a list of all Faction members
-    function getFactionMembers(uint256 _factionId)
-        public
-        view
-        returns (address[] memory)
-    {
-        return factions[_factionId].members;
-    }
-
-    /// @dev Get the total member count of a Faction
-    function getFactionTotalMember(uint256 _factionId)
-        external
-        view
-        returns (uint256)
-    {
-        return _factionIdToMemberCount[_factionId].current();
     }
 
     /// @dev The total count of the Factions created
