@@ -57,10 +57,10 @@ contract WorldOfWarcraft is Ownable {
             address(this)
         );
 
-        seedFactions();
+        _seedFactions();
     }
 
-    function seedFactions() internal onlyOwner {
+    function _seedFactions() internal onlyOwner {
         createFaction(
             CreateFactionDto({
                 name: "Alliance",
@@ -79,79 +79,126 @@ contract WorldOfWarcraft is Ownable {
     }
 
     /// @dev Creates a new Faction
-    function createFaction(CreateFactionDto memory dto)
+    function createFaction(CreateFactionDto memory _dto)
         public
         returns (uint256)
     {
-        uint256 _id = _factionIds.current();
+        uint256 _factionId = _factionIds.current();
         address _owner = msg.sender;
 
-        Faction memory newFaction = Faction({
-            id: _id,
+        Faction memory _faction = Faction({
+            id: _factionId,
             owner: _owner,
-            name: dto.name,
-            description: dto.description,
+            name: _dto.name,
+            description: _dto.description,
             members: new address[](0),
             totalMembers: 0
         });
 
-        factions.push(newFaction);
+        _createFaction(_owner, _faction);
+        addFactionMember(AddFactionMemberDto(_owner, _factionId));
 
+        _factionIds.increment();
+
+        return _factionId;
+    }
+
+    function _createFaction(address _owner, Faction memory _faction) private {
+        uint256 _factionId = _faction.id;
+        factions.push(_faction);
+        factionIdToOwner[_factionId] = _owner;
+        ownerToFactionsCount[_owner]++;
+        // Broadcast that a new Faction has been created
+        emit FactionCreated(_owner, _factionId, block.timestamp);
         console.log(
-            "_createFaction | A new faction has been created '%s' by '%s' with id '%s'",
-            newFaction.name,
+            "_createFaction | A new Faction has been created '%s' by '%s' with Faction ID '%s'\n",
+            _faction.name,
             _owner,
-            _id
+            _factionId
         );
         console.log(
             "_createFaction | Total Factions for '%s' is '%s'\n",
             _owner,
             ownerToFactionsCount[_owner]
         );
-
-        // Add the first member as the owner
-        // and increment it when a new member is added
-        factions[_id].members.push(_owner);
-        factions[_id].totalMembers++;
-
-        // Attach the identifier to the mapping
-        // that easily tells who is the Faction owner
-        factionIdToOwner[_id] = _owner;
-        ownerToFactionsCount[_owner]++;
-
-        // Broadcast that a new Faction has been created
-        emit FactionCreated(_owner, _id, block.timestamp);
-
-        _factionIds.increment();
-
-        return newFaction.id;
     }
 
-    struct AddMemberDto {
-        address target;
+    struct AddFactionMembersDto {
+        address[] invited;
         uint256 factionId;
     }
 
-    // function addMember(AddMemberDto memory dto) public returns (uint256) {
-    //     require(
-    //         factionIdToOwner[dto.factionId] == msg.sender,
-    //         "Only the owner of this Faction can add new members."
-    //     );
+    event FactionMemberAdded(
+        address member,
+        address addedBy,
+        uint256 factionId
+    );
 
-    //     address _owner = factionIdToOwner[dto.factionId];
-    // }
+    modifier onlyFactionOwner(uint256 _factionId) {
+        require(
+            factionIdToOwner[_factionId] == msg.sender,
+            "Only the owner of this Faction."
+        );
+        _;
+    }
+
+    /// @dev Adds multiple Faction members to a Faction
+    function addFactionMembers(AddFactionMembersDto memory _dto)
+        public
+        onlyFactionOwner(_dto.factionId)
+    {
+        for (uint256 index = 0; index < _dto.invited.length; index++) {
+            address invited = _dto.invited[index];
+
+            addFactionMember(AddFactionMemberDto(invited, _dto.factionId));
+        }
+    }
+
+    struct AddFactionMemberDto {
+        address invited;
+        uint256 factionId;
+    }
+
+    /// @dev Individually adds a Faction member
+    function addFactionMember(AddFactionMemberDto memory _dto)
+        public
+        onlyFactionOwner(_dto.factionId)
+    {
+        address _owner = factionIdToOwner[_dto.factionId];
+
+        factions[_dto.factionId].members.push(_dto.invited);
+        factions[_dto.factionId].totalMembers++;
+        ownerToFactionsCount[_owner]++;
+
+        console.log(
+            "addFactionMember | A new Faction Member '%s' has been added by '%s'\n",
+            _dto.invited,
+            _owner
+        );
+
+        emit FactionMemberAdded(_dto.invited, msg.sender, _dto.factionId);
+    }
+
+    /// @dev Retrieve a list of all Faction members
+    function getFactionMembers(uint256 _factionId)
+        public
+        view
+        returns (address[] memory)
+    {
+        return factions[_factionId].members;
+    }
 
     /// @dev The total count of the Factions created
-    function totalFactions() external view returns (uint256) {
+    function getTotalFactions() external view returns (uint256) {
         return _factionIds.current();
     }
 
     /// @dev All the Factions that are created
-    function allFactions() external view returns (Faction[] memory) {
+    function getAllFactions() public view returns (Faction[] memory) {
         return factions;
     }
 
-    function findFaction(uint256 _factionId)
+    function getFaction(uint256 _factionId)
         public
         view
         returns (Faction memory)
@@ -160,7 +207,7 @@ contract WorldOfWarcraft is Ownable {
     }
 
     /// @return all the Factions that the given address has
-    function findFactionByOwner(address _owner)
+    function getFactionsByOwner(address _owner)
         external
         view
         returns (Faction[] memory)
