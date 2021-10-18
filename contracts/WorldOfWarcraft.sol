@@ -2,9 +2,9 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Factory.sol";
+import "./GuildContext.sol";
 
-contract WorldOfWarcraft is Ownable, Factory {
+contract WorldOfWarcraft is Ownable, GuildContext {
     Counters.Counter private _characterIds;
 
     struct Character {
@@ -40,19 +40,12 @@ contract WorldOfWarcraft is Ownable, Factory {
             address(this)
         );
 
-        _seedFactions();
+        _seed();
     }
 
-    function _seedFactions() internal onlyOwner {
-        createFaction(
-            CreateFactionDto({
-                name: "Alliance",
-                description: "For the Alliance"
-            })
-        );
-
-        createFaction(
-            CreateFactionDto({name: "Horde", description: "FOR THE HORDE!!!"})
+    function _seed() private onlyOwner {
+        createGuild(
+            CreateGuildDto({name: "Genesis", description: "The first Guild"})
         );
     }
 }

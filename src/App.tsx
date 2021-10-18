@@ -20,6 +20,7 @@ async function useContract(): Promise<WorldOfWarcraft> {
 
 function App() {
   const [accounts, setAccounts] = useState<string[]>([]);
+  const [guilds, setGuilds] = useState<any[]>([]);
 
   useEffect(() => {}, []);
 
@@ -30,16 +31,17 @@ function App() {
     setAccounts(accounts);
   }
 
-  async function getAllFactions() {
+  async function getAllGuilds() {
     const contract = await useContract();
-    const factions = await contract.getAllFactions();
-    console.log({ factions });
+    const Guilds = await contract.getAllGuilds();
+    console.log({ Guilds });
+    setGuilds(Guilds);
   }
 
-  async function addFactionMember() {
+  async function addGuildMember() {
     const contract = await useContract();
-    contract.addFactionMember({
-      factionId: 1,
+    contract.addGuildMember({
+      guildId: 1,
       invited: "",
     });
   }
@@ -49,9 +51,10 @@ function App() {
       <h1>Hello</h1>
 
       <button onClick={connectWallet}>Connect Wallet</button>
-      <button onClick={getAllFactions}>Get All Factions</button>
-
       <pre>{JSON.stringify(accounts, null, 4)}</pre>
+
+      <button onClick={getAllGuilds}>Get All Guilds</button>
+      <pre>{JSON.stringify(guilds, null, 4)}</pre>
     </>
   );
 }

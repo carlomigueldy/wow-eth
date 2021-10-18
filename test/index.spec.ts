@@ -4,62 +4,64 @@ import { useLogger } from "../utils/logger";
 import { ethers } from "hardhat";
 
 describe("WorldOfWarcraft", () => {
-  describe("createFaction", () => {
-    const log = useLogger("createFaction");
+  describe("createGuild", () => {
+    const log = useLogger("createGuild");
 
-    it("should return 3 when a new Faction is created", async () => {
+    it("should return 3 when a new Guild is created", async () => {
       // const owner = await getOwner();
       const contract = await getContract();
 
-      let factions = await contract.getAllFactions();
-      log.v("getAllFactions", { factions });
+      let guilds = await contract.getAllGuilds();
+      log.v("getAllGuilds", { guilds });
 
-      await contract.createFaction({
+      await contract.createGuild({
         description: "We are the Scourge, all hail Arthas!",
         name: "The Scourge",
       });
 
-      factions = await contract.getAllFactions();
-      log.i("getAllFactions", { factions });
+      guilds = await contract.getAllGuilds();
+      log.i("getAllGuilds", { guilds });
 
-      expect(factions.length == 3).true;
+      expect(guilds).to.be.not.undefined;
+      expect(guilds).to.be.not.null;
+      expect(guilds).to.be.not.empty;
+      expect(guilds).to.have.lengthOf(2);
     });
   });
 
-  describe("getFaction", () => {
-    const log = useLogger("getFaction");
+  describe("getGuild", () => {
+    const log = useLogger("getGuild");
 
-    it("should return a Faction when given provided an existing Faction ID", async () => {
+    it("should return a Guild when given provided an existing Guild ID", async () => {
       const contract = await getContract();
 
-      const faction = await contract.getFaction(1);
+      const guild = await contract.getGuild(0);
 
-      assert(faction != null);
+      assert(guild != null);
     });
   });
 
-  describe("addFactionMember", () => {
-    const log = useLogger("addFactionMember");
+  describe("addGuildMember", () => {
+    const log = useLogger("addGuildMember");
 
     it("should add a new team member when called addMember", async () => {
       const [, invited] = await ethers.getSigners();
       const contract = await getContract();
-      const factionId = 2;
+      const guildId = 1;
 
-      await contract.createFaction({
+      await contract.createGuild({
         description: "We are the Scourge, all hail Arthas!",
         name: "The Scourge",
       });
-
-      await contract.addFactionMember({
+      await contract.addGuildMember({
         invited: invited.address,
-        factionId,
+        guildId,
       });
-      const faction = await contract.getFaction(factionId);
-      const members = faction.members;
+      const Guild = await contract.getGuild(guildId);
+      const members = Guild.members;
       log.i(members);
 
-      contract.on("FactionCreated", (...args) => {
+      contract.on("GuildCreated", (...args) => {
         log.i(args);
       });
 
@@ -73,68 +75,70 @@ describe("WorldOfWarcraft", () => {
       const owner = await getOwner();
       const [, invited] = await ethers.getSigners();
       const contract = await getContract();
-      const factionId = 2;
+      const guildId = 1;
 
-      await contract.createFaction({
+      await contract.createGuild({
         description: "We are the Scourge, all hail Arthas!",
         name: "The Scourge",
       });
-
-      await contract.addFactionMember({
+      await contract.addGuildMember({
         invited: invited.address,
-        factionId,
+        guildId,
       });
-      const faction = await contract.getFaction(factionId);
-      const members = faction.members;
+      const guild = await contract.getGuild(guildId);
+      const members = guild.members;
 
-      log.i(members);
+      log.i({ members });
 
+      expect(guild).to.be.not.undefined;
+      expect(guild).to.be.not.null;
       assert(members.length == 2);
     });
   });
 
-  describe("addFactionMembers", () => {
-    const log = useLogger("addFactionMembers");
+  describe("addGuildMembers", () => {
+    const log = useLogger("addGuildMembers");
 
     it("should total to 5 members when given 4 invited addresses", async () => {
       const [owner, invitedOne, invitedTwo, invitedThree, invitedFour] =
         await ethers.getSigners();
       const contract = await getContract();
-      const factionId = 2;
+      const guildId = 1;
 
       let balance = toEther(await owner.getBalance());
       log.i("owner.balance", { balance });
 
-      const estimatedGasForCreateFaction =
-        await contract.estimateGas.createFaction({
+      const estimatedGasForCreateGuild = await contract.estimateGas.createGuild(
+        {
           description: "We are the Scourge, all hail Arthas!",
           name: "The Scourge",
-        });
+        }
+      );
       console.log(
-        "estimatedGasForCreateFaction:",
-        toEther(estimatedGasForCreateFaction),
+        "estimatedGasForCreateGuild:",
+        toEther(estimatedGasForCreateGuild),
         "ETH\n"
       );
 
-      await contract.createFaction({
+      await contract.createGuild({
         description: "We are the Scourge, all hail Arthas!",
         name: "The Scourge",
       });
 
-      await contract.addFactionMembers({
+      await contract.addGuildMembers({
         invited: [
           invitedOne.address,
           invitedTwo.address,
           invitedThree.address,
           invitedFour.address,
         ],
-        factionId,
+        guildId,
       });
 
-      const faction = await contract.getFaction(factionId);
-      const members = faction.members;
+      const guild = await contract.getGuild(guildId);
+      const members = guild.members;
 
-      log.i("getFactionMembers", { members });
+      log.i("getGuildMembers", { members });
 
       balance = toEther(await owner.getBalance());
       log.i("owner.balance", { balance });
@@ -145,32 +149,32 @@ describe("WorldOfWarcraft", () => {
     it("should revert execution when given empty array", async () => {
       const [owner] = await ethers.getSigners();
       const contract = await getContract();
-      const factionId = 2;
+      const guildId = 1;
 
       let balance = toEther(await owner.getBalance());
       log.i("owner.balance", { balance });
 
-      await contract.createFaction({
+      await contract.createGuild({
         description: "We are the Scourge, all hail Arthas!",
         name: "The Scourge",
       });
 
-      const addFactionMembers = contract.addFactionMembers({
+      const addGuildMembers = contract.addGuildMembers({
         invited: [],
-        factionId,
+        guildId,
       });
 
-      await expect(addFactionMembers).revertedWith(
+      await expect(addGuildMembers).revertedWith(
         "Must invite at least 1 member."
       );
     });
   });
 
-  describe("getTotalFactions", () => {
+  describe("getTotalGuilds", () => {
     //
   });
 
-  describe("getFactionsByOwner", () => {
+  describe("getGuildsByOwner", () => {
     //
   });
 });
