@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Util.sol";
 import "./GuildContext.sol";
+import "./FactionContext.sol";
 
-contract WorldOfWarcraft is Ownable, GuildContext {
+contract WorldOfWarcraft is Util, GuildContext, FactionContext {
     Counters.Counter private _characterIds;
 
     struct Character {
@@ -44,6 +45,7 @@ contract WorldOfWarcraft is Ownable, GuildContext {
     }
 
     function _seed() private onlyOwner {
+        _seedFactions();
         createGuild(
             CreateGuildDto({name: "Genesis", description: "The first Guild"})
         );
