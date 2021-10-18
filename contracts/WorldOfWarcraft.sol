@@ -46,6 +46,7 @@ contract WorldOfWarcraft is Util, GuildContext, FactionContext {
 
     function _seed() private onlyOwner {
         _seedFactions();
+        joinFaction(FactionType.Alliance);
         createGuild(
             CreateGuildDto({name: "Genesis", description: "The first Guild"})
         );
